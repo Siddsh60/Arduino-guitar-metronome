@@ -1,4 +1,4 @@
-architecture diagram: https://github.com/Siddsh60/Arduino-guitar-metronome/blob/main/breadboard%20sketch%20guitar%20metronome.png?raw=true
+architecture diagram: https://github.com/Siddsh60/Arduino-guitar-metronome/blob/main/assets/breadboard%20sketch%20guitar%20metronome.png?raw=true
 real photo: 
 Note: The sensor on the top is supposed to be a MakerHawk piezo sensor. Since that component is not available in my diagramming software (Fritzing),
 it is represented here using a generic piezo buzzer part for illustration purposes only. The actual sensor is passive and used for detecting vibration,
