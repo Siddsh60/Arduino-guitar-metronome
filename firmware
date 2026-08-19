@@ -1,0 +1,247 @@
+#include <LiquidCrystal.h>
+
+// ============================================================
+// LCD
+// ============================================================
+LiquidCrystal lcd(7, 8, 9, 10, 11, 12);
+
+// ============================================================
+// Pins
+// ============================================================
+const int PIEZO_PIN = A0;
+const int BUZZER_PIN = 6;
+
+// ============================================================
+// Strum Detection
+// ============================================================
+const int STRUM_THRESHOLD = 50;
+
+// Minimum time between separate strums
+const unsigned long DEBOUNCE_TIME = 150;
+
+// ============================================================
+// Inactivity
+// ============================================================
+const unsigned long INACTIVITY_TIMEOUT = 10000;
+
+// ============================================================
+// Practice Settings
+// ============================================================
+const int TARGET_BPM = 120;
+const int BPM_TOLERANCE = 5;
+const int BPM_STEP = 10;
+const int STRUMS_TO_ADVANCE = 8;
+
+// ============================================================
+// Runtime Variables
+// ============================================================
+unsigned long lastStrumTime = 0;
+unsigned long lastMetronomeClick = 0;
+
+unsigned long metronomeInterval;
+
+float detectedBPM = 0;
+
+int currentBPM;
+int accurateStrumStreak = 0;
+
+// Prevents the same physical strum from triggering
+// multiple times while the piezo is still vibrating.
+bool piezoReady = true;
+
+
+// ============================================================
+// SETUP
+// ============================================================
+void setup() {
+
+  lcd.begin(16, 2);
+
+  pinMode(BUZZER_PIN, OUTPUT);
+
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Ready to strum!");
+  delay(1000);
+
+  // Start at half of the target BPM
+  currentBPM = TARGET_BPM / 2;
+
+  // Calculate time between metronome beats
+  metronomeInterval = 60000UL / currentBPM;
+
+  displayStatus();
+}
+
+
+// ============================================================
+// MAIN LOOP
+// ============================================================
+void loop() {
+
+  unsigned long now = millis();
+
+  int sensorValue = analogRead(PIEZO_PIN);
+
+
+  // ----------------------------------------------------------
+  // STRUM DETECTION
+  // ----------------------------------------------------------
+
+  // Piezo has returned below the threshold.
+  // This arms the sensor for the next strum.
+  if (sensorValue < STRUM_THRESHOLD) {
+    piezoReady = true;
+  }
+
+  // Detect a new strum
+  if (
+    sensorValue >= STRUM_THRESHOLD &&
+    piezoReady &&
+    (now - lastStrumTime >= DEBOUNCE_TIME)
+  ) {
+
+    processStrum(now);
+
+    // Don't detect another strum until the
+    // piezo signal drops back down.
+    piezoReady = false;
+  }
+
+
+  // ----------------------------------------------------------
+  // METRONOME
+  // ----------------------------------------------------------
+
+  if (now - lastMetronomeClick >= metronomeInterval) {
+
+    tone(BUZZER_PIN, 1500, 50);
+
+    lastMetronomeClick = now;
+  }
+
+
+  // ----------------------------------------------------------
+  // INACTIVITY
+  // ----------------------------------------------------------
+
+  if (
+    lastStrumTime != 0 &&
+    now - lastStrumTime >= INACTIVITY_TIMEOUT
+  ) {
+
+    accurateStrumStreak = 0;
+    lastStrumTime = 0;
+    piezoReady = true;
+
+    lcd.clear();
+
+    lcd.setCursor(0, 0);
+    lcd.print("Paused");
+
+    delay(800);
+
+    displayStatus();
+  }
+}
+
+
+// ============================================================
+// PROCESS STRUM
+// ============================================================
+void processStrum(unsigned long now) {
+
+  // Calculate BPM if this isn't the first strum
+  if (lastStrumTime != 0) {
+
+    unsigned long interval = now - lastStrumTime;
+
+    // Avoid calculating an unreasonable BPM
+    if (interval > 0) {
+      detectedBPM = 60000.0 / interval;
+
+      // Check whether the player is close enough
+      // to the current metronome tempo.
+      if (abs(detectedBPM - currentBPM) <= BPM_TOLERANCE) {
+
+        accurateStrumStreak++;
+
+      } else {
+
+        // Incorrect timing resets the streak
+        accurateStrumStreak = 0;
+      }
+
+
+      // ------------------------------------------------------
+      // LEVEL UP
+      // ------------------------------------------------------
+
+      if (
+        accurateStrumStreak >= STRUMS_TO_ADVANCE &&
+        currentBPM < TARGET_BPM
+      ) {
+
+        currentBPM += BPM_STEP;
+
+        // Don't go above the target
+        if (currentBPM > TARGET_BPM) {
+          currentBPM = TARGET_BPM;
+        }
+
+        // Update metronome speed
+        metronomeInterval = 60000UL / currentBPM;
+
+        // Reset streak
+        accurateStrumStreak = 0;
+
+        lcd.clear();
+
+        lcd.setCursor(0, 0);
+        lcd.print("Tempo Up!");
+
+        lcd.setCursor(0, 1);
+        lcd.print(currentBPM);
+        lcd.print(" BPM");
+
+        delay(800);
+      }
+    }
+  }
+
+
+  // Save time of this strum
+  lastStrumTime = now;
+
+
+  // ----------------------------------------------------------
+  // STRUM CONFIRMATION BEEP
+  // ----------------------------------------------------------
+
+  // Short, lower-pitched beep to confirm
+  // that the guitar strum was detected.
+  tone(BUZZER_PIN, 1000, 30);
+
+
+  displayStatus();
+}
+
+
+// ============================================================
+// LCD STATUS
+// ============================================================
+void displayStatus() {
+
+  lcd.clear();
+
+  lcd.setCursor(0, 0);
+  lcd.print("Tempo: ");
+  lcd.print(currentBPM);
+  lcd.print(" BPM");
+
+  lcd.setCursor(0, 1);
+  lcd.print("Streak: ");
+  lcd.print(accurateStrumStreak);
+  lcd.print("/");
+  lcd.print(STRUMS_TO_ADVANCE);
+}
