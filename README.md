@@ -1,4 +1,45 @@
 # Arduino-guitar-metronome
-An Arduino based metronome which starts buzzing at half of the target tempo you set. It listens to your guitar strumming via a piezo sensor to check how closely you match the current tempo, automatically increases it if you can play accurately at that speed for 8 strums in a row, and resets the count if you make a mistake. This process is repeated until you can accurately play at the target tempo.
+An Arduino-based adaptive metronome that starts at half of a user defined target tempo and listens to guitar strumming through a piezo sensor. The Arduino measures the time between strums and compares it with the expected beat interval at the current tempo using a fixed millisecond tolerance, keeping the definition of "close enough" consistent in real time. After 8 consecutive accurate strums, the tempo automatically increases; an inaccurate strum resets the streak. This process repeats until the player reaches the target tempo.
+
+Hardware -
+Arduino Uno
+Breadboard
+Jumper wires
+LCD 1602A Screen
+Makerhawk Piezo Sensor
+Passive Buzzer
+Potentiometer
+1MΩ Resistor
+
+Wirings
+
+Lcd -
+VSS :	GND
+VDD :	5V
+V0 : Potentiometer Middle pin
+RS : Arduino D7
+RW : GND
+E	: Arduino D8
+D4 :	Arduino D9
+D5 :	Arduino D10
+D6 :	Arduino D11
+D7 : Arduino D12
+LED A :	5V
+LED K :	GND
+
+Potentiometer - 
++ : 5V
+- : GND
+Middle Pin/wiper : V0
+
+Piezo Sensor -
++	: A0
+−	: GND
+1 MΩ resistor : between A0 and GND (parallel with piezo)
+
+Buzzer -
++	: Arduino D6
+−	: GND
+
 
 See [Hardware](https://github.com/Siddsh60/Arduino-guitar-metronome/blob/main/hardware) for the exact wiring and [Firmware](https://github.com/Siddsh60/Arduino-guitar-metronome/blob/main/firmware) for the code.
