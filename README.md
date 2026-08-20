@@ -28,18 +28,18 @@ LED A :	5V
 LED K :	GND
 
 Potentiometer - 
-+ : 5V
-- : GND
+positive : 5V
+negative : GND
 Middle Pin/wiper : V0
 
 Piezo Sensor -
-+	: A0
-−	: GND
+postitive	: A0
+negative	: GND
 1 MΩ resistor : between A0 and GND (parallel with piezo)
 
 Buzzer -
-+	: Arduino D6
-−	: GND
+positive	: Arduino D6
+negative	: GND
 
 
 See [Hardware](https://github.com/Siddsh60/Arduino-guitar-metronome/blob/main/hardware) for the exact wiring and [Firmware](https://github.com/Siddsh60/Arduino-guitar-metronome/blob/main/firmware) for the code.
