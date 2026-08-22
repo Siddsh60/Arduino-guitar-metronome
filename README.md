@@ -11,35 +11,48 @@ Passive Buzzer
 Potentiometer
 1MΩ Resistor
 
-Wirings
+## Wiring
 
-Lcd -
-VSS :	GND
-VDD :	5V
-V0 : Potentiometer Middle pin
-RS : Arduino D7
-RW : GND
-E	: Arduino D8
-D4 :	Arduino D9
-D5 :	Arduino D10
-D6 :	Arduino D11
-D7 : Arduino D12
-LED A :	5V
-LED K :	GND
+### LCD 1602A
 
-Potentiometer - 
-positive : 5V
-negative : GND
-Middle Pin/wiper : V0
+| LCD Pin | Connection |
+|---|---|
+| VSS | GND |
+| VDD | 5V |
+| V0 | Potentiometer middle pin (wiper) |
+| RS | Arduino D7 |
+| RW | GND |
+| E | Arduino D8 |
+| D4 | Arduino D9 |
+| D5 | Arduino D10 |
+| D6 | Arduino D11 |
+| D7 | Arduino D12 |
+| LED A | 5V |
+| LED K | GND |
 
-Piezo Sensor -
-postitive	: A0
-negative	: GND
-1 MΩ resistor : between A0 and GND (parallel with piezo)
+### Potentiometer
 
-Buzzer -
-positive	: Arduino D6
-negative	: GND
+| Potentiometer Pin | Connection |
+|---|---|
+| Positive | 5V |
+| Negative | GND |
+| Middle Pin / Wiper | LCD V0 |
+
+### Piezo Sensor
+
+| Piezo Pin | Connection |
+|---|---|
+| Positive / Signal | Arduino A0 |
+| Negative | GND |
+| 1 MΩ Resistor | Between A0 and GND (parallel with piezo) |
+
+### Passive Buzzer
+
+| Buzzer Pin | Connection |
+|---|---|
+| Positive | Arduino D6 |
+| Negative | GND |
+
 
 
 See [Hardware](https://github.com/Siddsh60/Arduino-guitar-metronome/blob/main/hardware) for the exact wiring and [Firmware](https://github.com/Siddsh60/Arduino-guitar-metronome/blob/main/firmware) for the code.
