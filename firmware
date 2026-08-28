@@ -1,73 +1,51 @@
 #include <LiquidCrystal.h>
 
-// --- LCD ---
 LiquidCrystal lcd(7, 8, 9, 10, 11, 12);
 
-// --- Pins ---
 const int SENSOR_PIN = A0;
 const int BUZZER_PIN = 6;
 
-// --- Sensor Settings ---
-
-// Start LOW because we are using a buzzer as a makeshift
-// piezo sensor.
-const int STRUM_THRESHOLD = 15;
-
-// Sensor must fall below this before another hit is allowed.
+const int STRUM_THRESHOLD = 30;
 const int RESET_THRESHOLD = 5;
-
-// Minimum time between hits.
 const unsigned long DEBOUNCE_TIME = 150;
 
-// --- Tempo Settings ---
 const int START_BPM = 60;
 const int TARGET_BPM = 120;
-
 const int BPM_STEP = 10;
-
 const int STRUMS_TO_ADVANCE = 8;
 
-// Allow +/- 150 ms from the expected beat.
-const unsigned long TIMING_TOLERANCE_MS = 150;
+const unsigned long TIMING_TOLERANCE_MS = 250;
+const unsigned long MISS_GRACE_TIME = 200;
 
-// --- Buzzer ---
 const int BUZZER_FREQUENCY = 1500;
 const int BUZZER_DURATION = 40;
 
-// --- Inactivity ---
 const unsigned long INACTIVITY_TIMEOUT = 10000;
 
-// --- Variables ---
 int currentBPM;
+int accurateStrumStreak = 0;
 
 unsigned long metronomeInterval;
-
 unsigned long lastMetronomeClick = 0;
 unsigned long lastStrumTime = 0;
 unsigned long lastHitTime = 0;
 
-int accurateStrumStreak = 0;
-
 bool sensorReady = true;
+bool missedStrumHandled = false;
 
 
-// --- Setup ---
 void setup() {
-
   Serial.begin(9600);
 
   lcd.begin(16, 2);
-
   pinMode(BUZZER_PIN, OUTPUT);
 
   currentBPM = START_BPM;
-
   metronomeInterval = 60000UL / currentBPM;
 
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("Guitar Metronome");
-
   lcd.setCursor(0, 1);
   lcd.print("Starting...");
 
@@ -79,42 +57,35 @@ void setup() {
 }
 
 
-// --- Main Loop ---
 void loop() {
-
   unsigned long now = millis();
-
   int sensorValue = analogRead(SENSOR_PIN);
 
-  // Debug
   Serial.print("Sensor = ");
   Serial.println(sensorValue);
 
-  // Re-arm sensor
+  // Re-arm after vibration settles
   if (sensorValue <= RESET_THRESHOLD) {
-
     sensorReady = true;
   }
 
-  // Detect hit
+  // Detect strum
   if (
     sensorValue >= STRUM_THRESHOLD &&
     sensorReady &&
     now - lastHitTime >= DEBOUNCE_TIME
   ) {
-
     Serial.println("******** HIT DETECTED ********");
 
     processStrum(now);
 
     sensorReady = false;
-
     lastHitTime = now;
+    missedStrumHandled = false;
   }
 
   // Metronome
   if (now - lastMetronomeClick >= metronomeInterval) {
-
     tone(
       BUZZER_PIN,
       BUZZER_FREQUENCY,
@@ -124,23 +95,42 @@ void loop() {
     lastMetronomeClick += metronomeInterval;
   }
 
-  // Inactivity
+  // Reset streak if next strum is missed
+  if (
+    lastStrumTime != 0 &&
+    !missedStrumHandled
+  ) {
+    unsigned long timeSinceLastStrum =
+        now - lastStrumTime;
+
+    unsigned long missLimit =
+        metronomeInterval + MISS_GRACE_TIME;
+
+    if (timeSinceLastStrum > missLimit) {
+      accurateStrumStreak = 0;
+      missedStrumHandled = true;
+
+      Serial.println(
+        "MISSED STRUM - STREAK RESET TO 0"
+      );
+
+      displayStatus();
+    }
+  }
+
+  // Long inactivity
   if (
     lastStrumTime != 0 &&
     now - lastStrumTime >= INACTIVITY_TIMEOUT
   ) {
-
     accurateStrumStreak = 0;
-
     lastStrumTime = 0;
-
     sensorReady = true;
+    missedStrumHandled = false;
 
     lcd.clear();
-
     lcd.setCursor(0, 0);
     lcd.print("Paused");
-
     lcd.setCursor(0, 1);
     lcd.print("No strums");
 
@@ -151,19 +141,16 @@ void loop() {
 }
 
 
-// --- Process Strum ---
 void processStrum(unsigned long now) {
 
-  // First hit
+  // First hit establishes timing
   if (lastStrumTime == 0) {
-
     lastStrumTime = now;
+    missedStrumHandled = false;
 
     lcd.clear();
-
     lcd.setCursor(0, 0);
     lcd.print("HIT!");
-
     lcd.setCursor(0, 1);
     lcd.print("First strum");
 
@@ -176,16 +163,16 @@ void processStrum(unsigned long now) {
     return;
   }
 
-  // Time between hits
-  unsigned long interval = now - lastStrumTime;
+  unsigned long interval =
+      now - lastStrumTime;
 
   unsigned long expectedInterval =
-    60000UL / currentBPM;
+      60000UL / currentBPM;
 
   long timingError =
-    (long)interval - (long)expectedInterval;
+      (long)interval -
+      (long)expectedInterval;
 
-  // Debug
   Serial.print("Hit interval: ");
   Serial.print(interval);
 
@@ -197,30 +184,34 @@ void processStrum(unsigned long now) {
 
   Serial.println(" ms");
 
-  // Timing check
-  if (abs(timingError) <= (long)TIMING_TOLERANCE_MS) {
-
+  // Accurate strum
+  if (
+    abs(timingError) <=
+    (long)TIMING_TOLERANCE_MS
+  ) {
     accurateStrumStreak++;
 
     Serial.print("GOOD HIT! Streak = ");
     Serial.println(accurateStrumStreak);
-
-  } else {
-
-    accurateStrumStreak = 0;
-
-    Serial.println("BAD TIMING - STREAK RESET");
   }
 
-  // Save time
-  lastStrumTime = now;
+  // Mistimed strum
+  else {
+    accurateStrumStreak = 0;
 
-  // Tempo up
+    Serial.println(
+      "BAD TIMING - STREAK RESET"
+    );
+  }
+
+  lastStrumTime = now;
+  missedStrumHandled = false;
+
+  // Increase tempo
   if (
     accurateStrumStreak >= STRUMS_TO_ADVANCE &&
     currentBPM < TARGET_BPM
   ) {
-
     currentBPM += BPM_STEP;
 
     if (currentBPM > TARGET_BPM) {
@@ -228,12 +219,11 @@ void processStrum(unsigned long now) {
     }
 
     metronomeInterval =
-      60000UL / currentBPM;
+        60000UL / currentBPM;
 
     accurateStrumStreak = 0;
 
     lcd.clear();
-
     lcd.setCursor(0, 0);
     lcd.print("TEMPO UP!");
 
@@ -251,9 +241,7 @@ void processStrum(unsigned long now) {
 }
 
 
-// --- Display Status ---
 void displayStatus() {
-
   lcd.clear();
 
   lcd.setCursor(0, 0);
