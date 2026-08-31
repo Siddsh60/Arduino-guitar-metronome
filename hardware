@@ -1,7 +1,12 @@
 architecture diagram: https://github.com/Siddsh60/Arduino-guitar-metronome/blob/main/assets/breadboard%20schematic%20final.png
 real photos: https://github.com/Siddsh60/Arduino-guitar-metronome/blob/main/assets/breadboard%20photo%201.jpeg?raw=true
              https://github.com/Siddsh60/Arduino-guitar-metronome/blob/main/assets/breadboard%20photo%202.jpeg?raw=true
+Video: https://github.com/Siddsh60/Arduino-guitar-metronome/blob/main/assets/guitar%20metronome%20recording.mp4
 
-Note: The sensor on the top is supposed to be a MakerHawk piezo sensor. Since that component is not available in my diagramming software (Fritzing),
+Notes:
+1) The sensor on the top is supposed to be a MakerHawk piezo sensor. Since that component is not available in my diagramming software (Fritzing),
 it is represented here using a generic piezo buzzer part for illustration purposes only. The sensor in the actual project (real photos) is used for detecting
 vibration, not producing sound unlike the one on the bottom.
+
+2) Tapping the sensor instead of strumming on guitar in the video for easier recording. When taped on to guitar, just use serial plotter to ensure the buzzer 
+does not reach the threshold but the strums do.
