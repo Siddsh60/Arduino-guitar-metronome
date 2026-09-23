@@ -55,4 +55,5 @@ Potentiometer,
 
 
 
-See [Hardware](https://github.com/Siddsh60/Arduino-guitar-metronome/blob/main/hardware) for the exact wiring and [Firmware]([https://github.com/Siddsh60/Arduino-guitar-metronome/blob/main/firmware(https://github.com/Siddsh60/Arduino-guitar-metronome/blob/55f61d69dee1aa7653242ed28613b43611967b45/firmware.ino)](https://github.com/Siddsh60/Arduino-guitar-metronome/blob/55f61d69dee1aa7653242ed28613b43611967b45/firmware.ino)) for the code.
+See [Hardware](https://github.com/Siddsh60/Arduino-guitar-metronome/blob/main/hardware) for the exact wiring and [Firmware](https://github.com/Siddsh60/Arduino-guitar-metronome/blob/55f61d69dee1aa7653242ed28613b43611967b45/firmware.ino) for the code.
+
